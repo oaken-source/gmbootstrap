@@ -1,0 +1,22 @@
+
+gmbootstrap
+===========
+
+ This poject aims at creating an environment on which a load of bash scripts
+derived from the Linux From Scratch project[1] are capable of bootstrapping a
+running GNU/Minix Operating System, powered by Vagrant[2].
+
+ Minix[3] is a Microkernel, which we hope will work well with the GNU userland
+to provide the open source community with an excellent alternative to Linux.
+
+ The current build of GNU/Minix uses LFS version 7.10, and Minix version 3.2.1
+
+Current Status:
+
+ v0.1: ...
+
+References:
+
+ [1] - http://www.linuxfromscratch.org/lfs/
+ [2] - http://www.vagrantup.com/
+ [3] - http://www.minix3.org/
