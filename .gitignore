@@ -1,2 +1,14 @@
 
+# image files
+*.qcow2
+*.img
+
+# LFS book files
 LFS-BOOK-*.pdf
+
+# build directories
+build/
+ssh/
+
+# vmdebootstrap generated files
+debootstrap.log
