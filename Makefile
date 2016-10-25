@@ -34,19 +34,20 @@ LFS_MIRROR = http://www.linuxfromscratch.org/lfs/downloads/$(LFS_VERSION)
 QEMU_ARCH = i386
 SSH_PORT = 2222
 QEMU_ARGS = --enable-kvm -net user,hostfwd=tcp::$(SSH_PORT)-:22 -net nic --nographic
+QEMUPID = qemu.pid
 
 srcdir = src
 builddir = _build
 sshdir = _ssh
 
  ##############################################################################
- # toplevel targets - all, clean, veryclean, book, start, ssh
+ # toplevel targets - all, clean, veryclean, book
 
 .PHONY: all
 all: $(builddir) $(sshdir) $(IMAGE)
 
 .PHONY: clean
-clean:
+clean: stop
 	rm -rf $(builddir) $(IMAGE) debootstrap.log
 
 .PHONY: veryclean
@@ -59,18 +60,25 @@ book: LFS-BOOK-$(LFS_VERSION).pdf
 LFS-BOOK-%.pdf:
 	wget $(LFS_MIRROR)/$@
 
-.PHONY: start
-start: all
-	qemu-system-$(QEMU_ARCH) $(QEMU_ARGS) $(IMAGE) &
+ ##############################################################################
+ # convenience targets for quick start and ssh access
 
 .PHONY: stop
-stop: all
-	ssh root@localhost -p $(SSH_PORT) -i $(sshdir)/id_rsa 'shutdown -h now'
+stop:
+	if [ -f $(QEMUPID) ]; then \
+	  ssh root@localhost -p $(SSH_PORT) -i $(sshdir)/id_rsa 'shutdown -h now' ; \
+	  rm $(QEMUPID) ; \
+	fi
 
 .PHONY: ssh
-ssh: all
+ssh: all $(QEMUPID)
+	while ! test "$$(find -not -newermt '-5sec' -iname '$(QEMUPID)')"; do \
+	  sleep 1; \
+	done
 	ssh root@localhost -p $(SSH_PORT) -i $(sshdir)/id_rsa
 
+$(QEMUPID):
+	qemu-system-$(QEMU_ARCH) $(QEMU_ARGS) $(IMAGE) & echo $$! > qemu.pid
 
  ##############################################################################
  # here be dragons - rules to build the final image
@@ -78,7 +86,7 @@ ssh: all
 $(IMAGE): $(builddir)/stage_0.qcow2
 	cp $< $@
 
-$(builddir)/stage_0.qcow2:
+$(builddir)/stage_0.qcow2: $(srcdir)/stage_0_customize.sh
 	sudo vmdebootstrap --image $@ --arch $(DEBIAN_ARCH) --size $(SIZE) \
 		--distribution jessie --grub --verbose --convert-qcow2 \
 		--package 'openssh-server build-essential bison gawk texinfo' \
@@ -88,8 +96,7 @@ $(builddir)/stage_0.qcow2:
  ##############################################################################
  # list dependencies of above build steps
 
-$(builddir)/stage_0.qcow2: $(srcdir)/stage_0_customize.sh \
-	$(sshdir)/id_rsa.pub \
+$(builddir)/stage_0.qcow2: $(sshdir)/id_rsa.pub \
 	$(patsubst %,$(sshdir)/ssh_host_%_key,$(HOSTKEYS)) \
 	$(patsubst %,$(sshdir)/ssh_host_%_key.pub,$(HOSTKEYS)) \
 
@@ -112,5 +119,3 @@ $(builddir):
 
 $(sshdir):
 	mkdir -p $@
-
-

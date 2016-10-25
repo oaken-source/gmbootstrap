@@ -12,3 +12,6 @@ _ssh/
 
 # vmdebootstrap generated files
 debootstrap.log
+
+# qemu pid file
+qemu.pid
