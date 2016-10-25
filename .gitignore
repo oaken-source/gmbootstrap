@@ -7,8 +7,8 @@
 LFS-BOOK-*.pdf
 
 # build directories
-build/
-ssh/
+_build/
+_ssh/
 
 # vmdebootstrap generated files
 debootstrap.log

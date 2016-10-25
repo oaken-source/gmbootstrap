@@ -23,7 +23,7 @@
 
 IMAGE ?= gnuminix.qcow2
 
-ARCH = i386
+DEBIAN_ARCH = i386
 SIZE = 64G
 
 HOSTKEYS = rsa dsa ecdsa ed25519
@@ -31,12 +31,16 @@ HOSTKEYS = rsa dsa ecdsa ed25519
 LFS_VERSION = 7.10
 LFS_MIRROR = http://www.linuxfromscratch.org/lfs/downloads/$(LFS_VERSION)
 
+QEMU_ARCH = i386
+SSH_PORT = 2222
+QEMU_ARGS = --enable-kvm -net user,hostfwd=tcp::$(SSH_PORT)-:22 -net nic --nographic
+
 srcdir = src
-builddir = build
-sshdir = ssh
+builddir = _build
+sshdir = _ssh
 
  ##############################################################################
- # toplevel targets - all, clean, veryclean, book
+ # toplevel targets - all, clean, veryclean, book, start, ssh
 
 .PHONY: all
 all: $(builddir) $(sshdir) $(IMAGE)
@@ -55,6 +59,19 @@ book: LFS-BOOK-$(LFS_VERSION).pdf
 LFS-BOOK-%.pdf:
 	wget $(LFS_MIRROR)/$@
 
+.PHONY: start
+start: all
+	qemu-system-$(QEMU_ARCH) $(QEMU_ARGS) $(IMAGE) &
+
+.PHONY: stop
+stop: all
+	ssh root@localhost -p $(SSH_PORT) -i $(sshdir)/id_rsa "shutdown -h now" || true
+
+.PHONY: ssh
+ssh: all
+	ssh root@localhost -p $(SSH_PORT) -i $(sshdir)/id_rsa || true
+
+
  ##############################################################################
  # here be dragons - rules to build the final image
 
@@ -62,9 +79,10 @@ $(IMAGE): $(builddir)/stage_0.qcow2
 	cp $< $@
 
 $(builddir)/stage_0.qcow2:
-	sudo vmdebootstrap --image $@ --arch $(ARCH) --size $(SIZE) --sparse \
+	sudo vmdebootstrap --image $@ --arch $(DEBIAN_ARCH) --size $(SIZE)
 		--distribution jessie --grub --verbose --convert-qcow2 \
-		--owner $$USER --package openssh-server --customize=$<
+		--owner $$USER --package openssh-server --customize=$< \
+		--sparse
 	rm -f $@.raw
 
  ##############################################################################
