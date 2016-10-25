@@ -21,38 +21,36 @@
  ##############################################################################
  # variable definitions
 
-IMAGE ?= gnuminix.qcow2
-
-DEBIAN_ARCH = i386
+IMAGE = gnuminix.qcow2
 SIZE = 64G
-
-HOSTKEYS = rsa dsa ecdsa ed25519
 
 LFS_VERSION = 7.10
 LFS_MIRROR = http://www.linuxfromscratch.org/lfs/downloads/$(LFS_VERSION)
 
+DEBIAN_ARCH = i386
 QEMU_ARCH = i386
 SSH_PORT = 2222
 QEMU_ARGS = --enable-kvm -net user,hostfwd=tcp::$(SSH_PORT)-:22 -net nic --nographic
-QEMUPID = qemu.pid
+
+HOSTKEYS = rsa dsa ecdsa ed25519
 
 srcdir = src
 builddir = _build
 sshdir = _ssh
 
  ##############################################################################
- # toplevel targets - all, clean, veryclean, book
+ # toplevel targets - all, clean, veryclean
 
 .PHONY: all
 all: $(builddir) $(sshdir) $(IMAGE)
 
 .PHONY: clean
-clean: stop
-	rm -rf $(builddir) $(IMAGE) debootstrap.log
+clean:
+	$(RM) -r $(builddir) $(IMAGE) debootstrap.log
 
 .PHONY: veryclean
 veryclean: clean
-	rm -rf $(sshdir) LFS-BOOK-*.pdf
+	$(RM) -r $(sshdir) LFS-BOOK-*.pdf
 
 .PHONY: book
 book: LFS-BOOK-$(LFS_VERSION).pdf
@@ -65,38 +63,36 @@ LFS-BOOK-%.pdf:
 
 .PHONY: stop
 stop:
-	if [ -f $(QEMUPID) ]; then \
-	  ssh root@localhost -p $(SSH_PORT) -i $(sshdir)/id_rsa 'shutdown -h now' ; \
-	  rm $(QEMUPID) ; \
-	fi
+	ssh root@localhost -p $(SSH_PORT) -i $(sshdir)/id_rsa 'shutdown -h now'
 
-.PHONY: ssh
-ssh: all $(QEMUPID)
-	while ! test "$$(find -not -newermt '-5sec' -iname '$(QEMUPID)')"; do \
-	  sleep 1; \
-	done
-	ssh root@localhost -p $(SSH_PORT) -i $(sshdir)/id_rsa
-
-$(QEMUPID):
-	qemu-system-$(QEMU_ARCH) $(QEMU_ARGS) $(IMAGE) & echo $$! > qemu.pid
+.PHONY: start
+start:
+	qemu-system-$(QEMU_ARCH) $(QEMU_ARGS) $(IMAGE) &
+	while ! ssh root@localhost -p $(SSH_PORT) -i $(sshdir)/id_rsa 'exit'; do sleep 1; done
 
  ##############################################################################
- # here be dragons - rules to build the final image
+ # rules to build the final image
 
 $(IMAGE): $(builddir)/stage_0.qcow2
 	cp $< $@
 
-$(builddir)/stage_0.qcow2: $(srcdir)/stage_0_customize.sh
+$(builddir)/stage_0.qcow2: $(srcdir)/stage_0.sh
+	qemu-img create $@.raw $(SIZE)
+	sudo ./$< $@.raw
+	qemu-img convert -O qcow2 $@.raw $@
+	$(RM) $@.raw
+
+$(builddir)/host.qcow2: $(srcdir)/host_customize.sh
 	sudo vmdebootstrap --image $@ --arch $(DEBIAN_ARCH) --size $(SIZE) \
 		--distribution jessie --grub --verbose --convert-qcow2 \
 		--package 'openssh-server build-essential bison gawk texinfo' \
 		--customize=$< --sparse --owner $$USER
-	rm -f $@.raw
+	$(RM) $@.raw
 
  ##############################################################################
  # list dependencies of above build steps
 
-$(builddir)/stage_0.qcow2: $(sshdir)/id_rsa.pub \
+$(builddir)/host.qcow2: $(sshdir)/id_rsa.pub \
 	$(patsubst %,$(sshdir)/ssh_host_%_key,$(HOSTKEYS)) \
 	$(patsubst %,$(sshdir)/ssh_host_%_key.pub,$(HOSTKEYS)) \
 
