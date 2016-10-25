@@ -24,9 +24,13 @@ set -u
 
 mkdir -vp $1/root/.ssh
 chmod -v 0700 $1/root/.ssh
-cp -v ssh/id_rsa.pub $1/root/.ssh/authorized_keys
+cp -v _ssh/id_rsa.pub $1/root/.ssh/authorized_keys
 chmod -v 0644 $1/root/.ssh/authorized_keys
 
-cp -v ssh/ssh_host_* $1/etc/ssh/
+cp -v _ssh/ssh_host_* $1/etc/ssh/
 chmod -v 0600 $1/etc/ssh/ssh_host_*_key
 chmod -v 0644 $1/etc/ssh/ssh_host_*_key.pub
+
+chroot $1 << EOF
+  ln -vsf bash /bin/sh
+EOF

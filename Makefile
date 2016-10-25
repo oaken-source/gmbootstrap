@@ -47,7 +47,7 @@ all: $(builddir) $(sshdir) $(IMAGE)
 
 .PHONY: clean
 clean:
-	rm -rf $(builddir) $(IMAGE)
+	rm -rf $(builddir) $(IMAGE) debootstrap.log
 
 .PHONY: veryclean
 veryclean: clean
@@ -65,11 +65,11 @@ start: all
 
 .PHONY: stop
 stop: all
-	ssh root@localhost -p $(SSH_PORT) -i $(sshdir)/id_rsa "shutdown -h now" || true
+	ssh root@localhost -p $(SSH_PORT) -i $(sshdir)/id_rsa 'shutdown -h now'
 
 .PHONY: ssh
 ssh: all
-	ssh root@localhost -p $(SSH_PORT) -i $(sshdir)/id_rsa || true
+	ssh root@localhost -p $(SSH_PORT) -i $(sshdir)/id_rsa
 
 
  ##############################################################################
@@ -79,10 +79,10 @@ $(IMAGE): $(builddir)/stage_0.qcow2
 	cp $< $@
 
 $(builddir)/stage_0.qcow2:
-	sudo vmdebootstrap --image $@ --arch $(DEBIAN_ARCH) --size $(SIZE)
+	sudo vmdebootstrap --image $@ --arch $(DEBIAN_ARCH) --size $(SIZE) \
 		--distribution jessie --grub --verbose --convert-qcow2 \
-		--owner $$USER --package openssh-server --customize=$< \
-		--sparse
+		--package 'openssh-server build-essential bison gawk texinfo' \
+		--customize=$< --sparse --owner $$USER
 	rm -f $@.raw
 
  ##############################################################################
