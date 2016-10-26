@@ -24,9 +24,6 @@
 IMAGE = gnuminix.qcow2
 SIZE = 64G
 
-LFS_VERSION = 7.10
-LFS_MIRROR = http://www.linuxfromscratch.org/lfs/downloads/$(LFS_VERSION)
-
 DEBIAN_ARCH = i386
 QEMU_ARCH = i386
 SSH_PORT = 2222
@@ -37,9 +34,12 @@ SCPFLAGS = -P $(SSH_PORT) -i $(sshdir)/id_rsa
 HOSTKEYS = rsa dsa ecdsa ed25519
 HOSTPACKAGES = openssh-server build-essential bison gawk texinfo ca-certificates
 
-srcdir = src
-builddir = _build
-sshdir = _ssh
+export LFS_VERSION = 7.10
+export LFS_MIRROR = http://www.linuxfromscratch.org/lfs/downloads/$(LFS_VERSION)
+
+export srcdir = src
+export builddir = _build
+export sshdir = _ssh
 
  ##############################################################################
  # toplevel targets - all, clean, veryclean
@@ -71,23 +71,23 @@ LFS-BOOK-%.pdf:
 $(IMAGE): $(builddir)/host.qcow2 $(builddir)/stage_1.qcow2
 	cp $< $@
 
-$(builddir)/stage_1.qcow2: $(builddir)/stage_0.qcow2
+$(builddir)/stage_%.qcow2:
 	cp $< $@~
 	qemu-system-$(QEMU_ARCH) -net user,hostfwd=tcp::$(SSH_PORT)-:22 -net nic \
 		--enable-kvm --nographic -hda $(builddir)/host.qcow2 -hdb $@~ &
 	while ! ssh root@localhost $(SSHFLAGS) 'exit'; do sleep 1; done
-	scp -r $(SCPFLAGS) $(srcdir)/stage_1/ root@localhost:
-	ssh root@localhost $(SSHFLAGS) 'make -C stage_1'
+	scp -r $(SCPFLAGS) $(srcdir)/stage_$*/ root@localhost:
+	ssh root@localhost $(SSHFLAGS) 'cd stage_$* && bash stage_$*.sh'
 	ssh root@localhost $(SSHFLAGS) 'shutdown -h now'
 	mv $@~ $@
 
-$(builddir)/stage_0.qcow2: $(srcdir)/stage_0/prepare.sh
+$(builddir)/stage_0.qcow2:
 	qemu-img create $@~ $(SIZE)
-	sudo ./$< $@~
+	sudo -E bash $(srcdir)/stage_0/stage_0.sh $@~
 	qemu-img convert -O qcow2 $@~ $@
 	$(RM) $@~
 
-$(builddir)/host.qcow2: $(srcdir)/stage_0/host_customize.sh
+$(builddir)/host.qcow2: $(srcdir)/host_customize.sh
 	sudo vmdebootstrap --image $@~ --arch $(DEBIAN_ARCH) --size $(SIZE) \
 		--distribution jessie --grub --verbose --sparse --owner $$USER \
 		$(patsubst %,--package %,$(HOSTPACKAGES)) --customize=$<
@@ -97,7 +97,14 @@ $(builddir)/host.qcow2: $(srcdir)/stage_0/host_customize.sh
  ##############################################################################
  # list additional dependencies of above build steps
 
-$(builddir)/stage_1.qcow2: $(shell find $(srcdir)/stage_1 -type f -not -iname '.*')
+$(builddir)/stage_2.qcow2: $(builddir)/stage_1.qcow2 \
+	$(shell find $(srcdir)/stage_0 -type f -not -iname '.*')
+
+$(builddir)/stage_1.qcow2: $(builddir)/stage_0.qcow2 \
+	$(shell find $(srcdir)/stage_0 -type f -not -iname '.*')
+
+$(builddir)/stage_0.qcow2: \
+	$(shell find $(srcdir)/stage_0 -type f -not -iname '.*')
 
 $(builddir)/host.qcow2: $(sshdir)/id_rsa\
 	$(patsubst %,$(sshdir)/ssh_host_%_key,$(HOSTKEYS))
