@@ -75,7 +75,8 @@ $(IMAGE): $(builddir)/host.qcow2 $(builddir)/stage_2.qcow2
 $(builddir)/stage_%.qcow2:
 	cp $< $@~
 	qemu-system-$(QEMU_ARCH) -net user,hostfwd=tcp::$(SSH_PORT)-:22 -net nic \
-		--enable-kvm --nographic -hda $(builddir)/host.qcow2 -hdb $@~ &
+		--enable-kvm --nographic -hda $(builddir)/host.qcow2 -hdb $@~ \
+		-m 1024 &
 	while ! ssh root@localhost $(SSHFLAGS) 'exit'; do sleep 1; done
 	scp -r $(SCPFLAGS) $(srcdir)/stage_$*/ root@localhost:/opt/lfs/
 	ssh root@localhost $(SSHFLAGS) 'cd /opt/lfs/stage_$* && bash stage_$*.sh'

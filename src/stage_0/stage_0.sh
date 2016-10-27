@@ -24,7 +24,7 @@
 
 set -e
 set -u
-set -x
+
 
 loop=$(losetup -f --show $1)
 
