@@ -118,5 +118,14 @@ rm -rf gcc-6.2.0
  ##############################################################################
  # linux-4.7.2 api headers
 
+tar -xf linux-4.7.2.tar.xz
+cd linux-4.7.2
 
+make mrproper
+
+make INSTALL_HDR_PATH=dest headers_install
+cp -rv dest/include/* /tools/include
+
+cd ..
+rm -rf linux-4.7.2
 
