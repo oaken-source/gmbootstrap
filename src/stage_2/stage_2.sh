@@ -19,28 +19,19 @@
  ##############################################################################
 
  ##############################################################################
- # this script is passed to vmdebootstrap to finalize preparation of the
- # virtual host environment.
+ # this script is invoked on the virtual host to prepare the environment and to
+ # initiate the build steps of the preliminary toolchain as the lfs user
 
 set -e
 set -u
 
 
-mkdir -vp $1/root/.ssh
-chmod -v 0700 $1/root/.ssh
-cp -v _ssh/id_rsa.pub $1/root/.ssh/authorized_keys
-chmod -v 0644 $1/root/.ssh/authorized_keys
+export LFS=/mnt/lfs
 
-cp -v _ssh/ssh_host_* $1/etc/ssh/
-chmod -v 0600 $1/etc/ssh/ssh_host_*_key
-chmod -v 0644 $1/etc/ssh/ssh_host_*_key.pub
 
-mkdir -vp $1/opt/lfs
-chmod -v a+wt $1/opt/lfs
+mount -v /dev/sdb4 $LFS
+mount -v /dev/sdb2 $LFS/boot
+mount -v /dev/sdb5 $LFS/home
+swapon -v /dev/sdb3
 
-chroot $1 << EOF
-  ln -vsf bash /bin/sh
-
-  groupadd lfs
-  useradd -s /bin/bash -g lfs -m -k /dev/null lfs
-EOF
+su - lfs < /opt/lfs/stage_2/stage_2_lfs.sh

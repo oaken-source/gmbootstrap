@@ -32,7 +32,8 @@ SSHFLAGS = -p $(SSH_PORT) -i $(sshdir)/id_rsa
 SCPFLAGS = -P $(SSH_PORT) -i $(sshdir)/id_rsa
 
 HOSTKEYS = rsa dsa ecdsa ed25519
-HOSTPACKAGES = openssh-server build-essential bison gawk texinfo ca-certificates
+HOSTPACKAGES = openssh-server build-essential bison gawk sudo ca-certificates \
+	       texinfo
 
 export LFS_VERSION = 7.10
 export LFS_MIRROR = http://www.linuxfromscratch.org/lfs/downloads/$(LFS_VERSION)
@@ -68,7 +69,7 @@ LFS-BOOK-%.pdf:
  ##############################################################################
  # rules to build the final image
 
-$(IMAGE): $(builddir)/host.qcow2 $(builddir)/stage_1.qcow2
+$(IMAGE): $(builddir)/host.qcow2 $(builddir)/stage_2.qcow2
 	cp $< $@
 
 $(builddir)/stage_%.qcow2:
@@ -76,8 +77,8 @@ $(builddir)/stage_%.qcow2:
 	qemu-system-$(QEMU_ARCH) -net user,hostfwd=tcp::$(SSH_PORT)-:22 -net nic \
 		--enable-kvm --nographic -hda $(builddir)/host.qcow2 -hdb $@~ &
 	while ! ssh root@localhost $(SSHFLAGS) 'exit'; do sleep 1; done
-	scp -r $(SCPFLAGS) $(srcdir)/stage_$*/ root@localhost:
-	ssh root@localhost $(SSHFLAGS) 'cd stage_$* && bash stage_$*.sh'
+	scp -r $(SCPFLAGS) $(srcdir)/stage_$*/ root@localhost:/opt/lfs/
+	ssh root@localhost $(SSHFLAGS) 'cd /opt/lfs/stage_$* && bash stage_$*.sh'
 	ssh root@localhost $(SSHFLAGS) 'shutdown -h now'
 	mv $@~ $@
 
@@ -98,15 +99,15 @@ $(builddir)/host.qcow2: $(srcdir)/host_customize.sh
  # list additional dependencies of above build steps
 
 $(builddir)/stage_2.qcow2: $(builddir)/stage_1.qcow2 \
-	$(shell find $(srcdir)/stage_0 -type f -not -iname '.*')
+	$(srcdir)/stage_2/stage_2.sh $(srcdir)/stage_2/stage_2_lfs.sh
 
 $(builddir)/stage_1.qcow2: $(builddir)/stage_0.qcow2 \
-	$(shell find $(srcdir)/stage_0 -type f -not -iname '.*')
+	$(srcdir)/stage_1/stage_1.sh
 
 $(builddir)/stage_0.qcow2: \
-	$(shell find $(srcdir)/stage_0 -type f -not -iname '.*')
+	$(srcdir)/stage_0/stage_0.sh
 
-$(builddir)/host.qcow2: $(sshdir)/id_rsa\
+$(builddir)/host.qcow2: $(srcdir)/host_customize.sh $(sshdir)/id_rsa\
 	$(patsubst %,$(sshdir)/ssh_host_%_key,$(HOSTKEYS))
 
  ##############################################################################
