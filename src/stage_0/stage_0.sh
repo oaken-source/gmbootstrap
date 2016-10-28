@@ -24,6 +24,7 @@
 
 set -e
 set -u
+set -x
 
 
 loop=$(losetup -f --show $1)
@@ -51,12 +52,21 @@ mkdir -pv $LFS/{boot,home}
 mount -v ${loop}p2 $LFS/boot
 mount -v ${loop}p5 $LFS/home
 
+manual_download() {
+  echo "failed to download: $1"
+  echo "please download $(basename $1) manually"
+  bash
+  test -f $(basename $1)
+}
+
 mkdir -pv $LFS/sources
 chmod -v a+wt $LFS/sources
-wget -c -P $LFS/sources $LFS_MIRROR/wget-list
-wget -i $LFS/sources/wget-list -c -P $LFS/sources
-wget -c -P $LFS/sources $LFS_MIRROR/md5sums
 pushd $LFS/sources
+wget -c $LFS_MIRROR/wget-list
+for url in $(cat $LFS/sources/wget-list); do
+  wget -c $url || manual_download $url
+done
+wget -c $LFS_MIRROR/md5sums
 md5sum -c md5sums
 popd
 

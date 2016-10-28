@@ -44,3 +44,12 @@ chroot $1 << EOF
   groupadd lfs
   useradd -s /bin/bash -g lfs -m -k /dev/null lfs
 EOF
+
+mkdir -vp $1/home/lfs/.ssh
+chmod -v 0700 $1/home/lfs/.ssh
+cp -v _ssh/id_rsa.pub $1/home/lfs/.ssh/authorized_keys
+chmod -v 0644 $1/home/lfs/.ssh/authorized_keys
+
+chroot $1 << EOF
+  chown -R lfs:lfs /home/lfs/.ssh
+EOF

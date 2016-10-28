@@ -46,7 +46,7 @@ export sshdir = _ssh
  # toplevel targets - all, clean, veryclean
 
 .PHONY: all
-all: $(builddir) $(sshdir) $(IMAGE)
+all: $(builddir) $(sshdir) $(builddir)/host.qcow2 $(IMAGE)
 
 .PHONY: clean
 clean:
@@ -55,6 +55,12 @@ clean:
 .PHONY: veryclean
 veryclean: clean
 	$(RM) -r $(sshdir) LFS-BOOK-*.pdf
+
+.PHONY: start
+start:
+	qemu-system-$(QEMU_ARCH) -net user,hostfwd=tcp::$(SSH_PORT)-:22 -net nic \
+		--enable-kvm --nographic -hda $(builddir)/host.qcow2 -hdb $(IMAGE) \
+		-m 1024 &
 
 .PHONY: ssh
 ssh:
@@ -69,7 +75,7 @@ LFS-BOOK-%.pdf:
  ##############################################################################
  # rules to build the final image
 
-$(IMAGE): $(builddir)/host.qcow2 $(builddir)/stage_2.qcow2
+$(IMAGE): $(builddir)/stage_2.qcow2
 	cp $< $@
 
 $(builddir)/stage_%.qcow2:
@@ -80,7 +86,7 @@ $(builddir)/stage_%.qcow2:
 	while ! ssh root@localhost $(SSHFLAGS) 'exit'; do sleep 1; done
 	scp -r $(SCPFLAGS) $(srcdir)/stage_$*/ root@localhost:/opt/lfs/
 	ssh root@localhost $(SSHFLAGS) 'cd /opt/lfs/stage_$* && bash stage_$*.sh'
-	ssh root@localhost $(SSHFLAGS) 'shutdown -h now'
+	ssh root@localhost $(SSHFLAGS) 'shutdown -h now' || true
 	mv $@~ $@
 
 $(builddir)/stage_0.qcow2:
@@ -92,7 +98,8 @@ $(builddir)/stage_0.qcow2:
 $(builddir)/host.qcow2: $(srcdir)/host_customize.sh
 	sudo vmdebootstrap --image $@~ --arch $(DEBIAN_ARCH) --size $(SIZE) \
 		--distribution jessie --grub --verbose --sparse --owner $$USER \
-		$(patsubst %,--package %,$(HOSTPACKAGES)) --customize=$<
+		$(patsubst %,--package %,$(HOSTPACKAGES)) --customize=$< \
+		--enable-dhcp
 	qemu-img convert -O qcow2 $@~ $@
 	$(RM) $@~
 
