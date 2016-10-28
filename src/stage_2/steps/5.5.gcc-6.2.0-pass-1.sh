@@ -18,47 +18,6 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this scrips in invoked as the lfs user to build the preliminary toolchain on
- # the virtual host.
-
-set -e
-set -u
-set -x
-
-
-source ~/.bashrc
-cd $LFS/sources
-
- ##############################################################################
- # binutils-2.27 - pass 1
-
-tar -xf binutils-2.27.tar.bz2
-cd binutils-2.27
-
-mkdir -v build
-cd build
-
-../configure --prefix=/tools            \
-             --with-sysroot=$LFS        \
-             --with-lib-path=/tools/lib \
-             --target=$LFS_TGT          \
-             --disable-nls              \
-             --disable-werror
-
-make
-
-case $(uname -m) in
-  x86_64) mkdir -v /tools/lib && ln -sv lib /tools/lib64 ;;
-esac
-
-make install
-
-cd ../..
-rm -rf binutils-2.27
-
- ##############################################################################
- # gcc-6.2.0 - pass 1
 
 tar -xf gcc-6.2.0.tar.bz2
 cd gcc-6.2.0
@@ -111,23 +70,7 @@ cd build
     --enable-languages=c,c++
 
 make
-
 make install
 
 cd ../..
 rm -rf gcc-6.2.0
-
- ##############################################################################
- # linux-4.7.2 api headers
-
-tar -xf linux-4.7.2.tar.xz
-cd linux-4.7.2
-
-make mrproper
-
-make INSTALL_HDR_PATH=dest headers_install
-cp -rv dest/include/* /tools/include
-
-cd ..
-rm -rf linux-4.7.2
-

@@ -106,16 +106,14 @@ $(builddir)/host.qcow2: $(srcdir)/host_customize.sh
  ##############################################################################
  # list additional dependencies of above build steps
 
-$(builddir)/stage_2.qcow2: $(builddir)/stage_1.qcow2 \
-	$(srcdir)/stage_2/stage_2.sh $(srcdir)/stage_2/stage_2_lfs.sh
+$(builddir)/stage_2.qcow2: $(builddir)/stage_1.qcow2 $(srcdir)/stage_2/stage_2.sh \
+	$(wildcard $(srcdir)/stage_2/steps/*.sh)
 
-$(builddir)/stage_1.qcow2: $(builddir)/stage_0.qcow2 \
-	$(srcdir)/stage_1/stage_1.sh
+$(builddir)/stage_1.qcow2: $(builddir)/stage_0.qcow2 $(srcdir)/stage_1/stage_1.sh
 
-$(builddir)/stage_0.qcow2: \
-	$(srcdir)/stage_0/stage_0.sh
+$(builddir)/stage_0.qcow2: $(srcdir)/stage_0/stage_0.sh
 
-$(builddir)/host.qcow2: $(srcdir)/host_customize.sh $(sshdir)/id_rsa\
+$(builddir)/host.qcow2: $(sshdir)/id_rsa \
 	$(patsubst %,$(sshdir)/ssh_host_%_key,$(HOSTKEYS))
 
  ##############################################################################

@@ -18,29 +18,29 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this script is passed to vmdebootstrap to finalize preparation of the
- # virtual host environment.
 
-set -e
-set -u
+tar -xf binutils-2.27.tar.bz2
+cd binutils-2.27
 
+mkdir -v build
+cd build
 
-mkdir -vp $1/root/.ssh
-chmod -v 0700 $1/root/.ssh
-cp -v _ssh/id_rsa.pub $1/root/.ssh/authorized_keys
-chmod -v 0644 $1/root/.ssh/authorized_keys
+CC=$LFS_TGT-gcc                \
+AR=$LFS_TGT-ar                 \
+RANLIB=$LFS_TGT-ranlib         \
+../configure                   \
+    --prefix=/tools            \
+    --disable-nls              \
+    --disable-werror           \
+    --with-lib-path=/tools/lib \
+    --with-sysroot
 
-cp -v _ssh/ssh_host_* $1/etc/ssh/
-chmod -v 0600 $1/etc/ssh/ssh_host_*_key
-chmod -v 0644 $1/etc/ssh/ssh_host_*_key.pub
+make
+make install
 
-mkdir -vp $1/opt/lfs
-chmod -v a+wt $1/opt/lfs
+make -C ld clean
+make -C ld LIB_PATH=/usr/lib:/lib
+cp -v ld/ld-new /tools/bin
 
-chroot $1 << EOF
-  ln -vsf bash /bin/sh
-
-  groupadd lfs
-  useradd -s /bin/bash -g lfs -m -k /dev/null lfs
-EOF
+cd ../..
+rm -rf binutils-2.27

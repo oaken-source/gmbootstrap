@@ -18,29 +18,24 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this script is passed to vmdebootstrap to finalize preparation of the
- # virtual host environment.
 
-set -e
-set -u
+tar -xf gcc-6.2.0.tar.bz2
+cd gcc-6.2.0
 
+mkdir -v build
+cd build
 
-mkdir -vp $1/root/.ssh
-chmod -v 0700 $1/root/.ssh
-cp -v _ssh/id_rsa.pub $1/root/.ssh/authorized_keys
-chmod -v 0644 $1/root/.ssh/authorized_keys
+../libstdc++-v3/configure           \
+    --host=$LFS_TGT                 \
+    --prefix=/tools                 \
+    --disable-multilib              \
+    --disable-nls                   \
+    --disable-libstdcxx-threads     \
+    --disable-libstdcxx-pch         \
+    --with-gxx-include-dir=/tools/$LFS_TGT/include/c++/6.2.0
 
-cp -v _ssh/ssh_host_* $1/etc/ssh/
-chmod -v 0600 $1/etc/ssh/ssh_host_*_key
-chmod -v 0644 $1/etc/ssh/ssh_host_*_key.pub
+make
+make install
 
-mkdir -vp $1/opt/lfs
-chmod -v a+wt $1/opt/lfs
-
-chroot $1 << EOF
-  ln -vsf bash /bin/sh
-
-  groupadd lfs
-  useradd -s /bin/bash -g lfs -m -k /dev/null lfs
-EOF
+cd ../..
+rm -rf gcc-6.2.0

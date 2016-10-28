@@ -18,29 +18,23 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this script is passed to vmdebootstrap to finalize preparation of the
- # virtual host environment.
 
-set -e
-set -u
+tar -xf expect5.45.tar.gz
+cd expect5.45
 
+cp -v configure{,.orig}
+sed 's:/usr/local/bin:/bin:' configure.orig > configure
 
-mkdir -vp $1/root/.ssh
-chmod -v 0700 $1/root/.ssh
-cp -v _ssh/id_rsa.pub $1/root/.ssh/authorized_keys
-chmod -v 0644 $1/root/.ssh/authorized_keys
+./configure --prefix=/tools       \
+            --with-tcl=/tools/lib \
+            --with-tclinclude=/tools/include
 
-cp -v _ssh/ssh_host_* $1/etc/ssh/
-chmod -v 0600 $1/etc/ssh/ssh_host_*_key
-chmod -v 0644 $1/etc/ssh/ssh_host_*_key.pub
+make
 
-mkdir -vp $1/opt/lfs
-chmod -v a+wt $1/opt/lfs
+# test suite is not critical at this point
+# make test
 
-chroot $1 << EOF
-  ln -vsf bash /bin/sh
+make SCRIPTS="" install
 
-  groupadd lfs
-  useradd -s /bin/bash -g lfs -m -k /dev/null lfs
-EOF
+cd ..
+rm -rf expect5.45

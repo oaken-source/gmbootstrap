@@ -18,29 +18,17 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this script is passed to vmdebootstrap to finalize preparation of the
- # virtual host environment.
 
-set -e
-set -u
+tar -xf perl-5.24.0.tar.bz2
+cd perl-5.24.0
 
+sh Configure -des -Dprefix=/tools -Dlibs=-lm
 
-mkdir -vp $1/root/.ssh
-chmod -v 0700 $1/root/.ssh
-cp -v _ssh/id_rsa.pub $1/root/.ssh/authorized_keys
-chmod -v 0644 $1/root/.ssh/authorized_keys
+make
 
-cp -v _ssh/ssh_host_* $1/etc/ssh/
-chmod -v 0600 $1/etc/ssh/ssh_host_*_key
-chmod -v 0644 $1/etc/ssh/ssh_host_*_key.pub
+cp -v perl cpan/podlators/scripts/pod2man /tools/bin
+mkdir -pv /tools/lib/perl5/5.24.0
+cp -Rv lib/* /tools/lib/perl5/5.24.0
 
-mkdir -vp $1/opt/lfs
-chmod -v a+wt $1/opt/lfs
-
-chroot $1 << EOF
-  ln -vsf bash /bin/sh
-
-  groupadd lfs
-  useradd -s /bin/bash -g lfs -m -k /dev/null lfs
-EOF
+cd ..
+rm -rf perl-5.24.0

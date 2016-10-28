@@ -18,29 +18,25 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this script is passed to vmdebootstrap to finalize preparation of the
- # virtual host environment.
 
-set -e
-set -u
+tar -xf tcl-core8.6.6-src.tar.gz
+cd tcl8.6.6
 
+cd unix
+./configure --prefix=/tools
 
-mkdir -vp $1/root/.ssh
-chmod -v 0700 $1/root/.ssh
-cp -v _ssh/id_rsa.pub $1/root/.ssh/authorized_keys
-chmod -v 0644 $1/root/.ssh/authorized_keys
+make
 
-cp -v _ssh/ssh_host_* $1/etc/ssh/
-chmod -v 0600 $1/etc/ssh/ssh_host_*_key
-chmod -v 0644 $1/etc/ssh/ssh_host_*_key.pub
+# test suite is not critial at this point
+# TZ=UTC make test
 
-mkdir -vp $1/opt/lfs
-chmod -v a+wt $1/opt/lfs
+make install
 
-chroot $1 << EOF
-  ln -vsf bash /bin/sh
+chmod -v u+w /tools/lib/libtcl8.6.so
 
-  groupadd lfs
-  useradd -s /bin/bash -g lfs -m -k /dev/null lfs
-EOF
+make install-private-headers
+
+ln -sv tclsh8.6 /tools/bin/tclsh
+
+cd ../..
+rm -rf tcl8.6.6

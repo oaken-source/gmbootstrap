@@ -34,4 +34,17 @@ mount -v /dev/sdb2 $LFS/boot
 mount -v /dev/sdb5 $LFS/home
 swapon -v /dev/sdb3
 
-su - lfs < /opt/lfs/stage_2/stage_2_lfs.sh
+su - lfs << 'EOF'
+set -e
+set -u
+set -x
+
+source ~/.bashrc
+cd $LFS/sources
+
+for step in $(ls /opt/lfs/stage_2/steps/ | sort -V); do
+	source /opt/lfs/stage_2/steps/$step
+done
+EOF
+
+chown -R root:root $LFS/tools
