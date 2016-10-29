@@ -19,7 +19,7 @@
  ##############################################################################
 
 
-tar -xf texinfo-5.1.tar.xz
+tar -xf texinfo-6.1.tar.xz
 cd texinfo-6.1
 
 ./configure --prefix=/tools
