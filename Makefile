@@ -33,7 +33,7 @@ SCPFLAGS = -P $(SSH_PORT) -i $(sshdir)/id_rsa
 
 HOSTKEYS = rsa dsa ecdsa ed25519
 HOSTPACKAGES = openssh-server build-essential bison gawk sudo ca-certificates \
-	       texinfo
+	       texinfo zerofree
 
 export LFS_VERSION = 7.10
 export LFS_MIRROR = http://www.linuxfromscratch.org/lfs/downloads/$(LFS_VERSION)
@@ -75,7 +75,7 @@ LFS-BOOK-%.pdf:
  ##############################################################################
  # rules to build the final image
 
-$(IMAGE): $(builddir)/stage_2.qcow2
+$(IMAGE): $(builddir)/stage_3.qcow2
 	cp $< $@
 
 $(builddir)/stage_%.qcow2:
@@ -87,7 +87,8 @@ $(builddir)/stage_%.qcow2:
 	scp -r $(SCPFLAGS) $(srcdir)/stage_$*/ root@localhost:/opt/lfs/
 	ssh root@localhost $(SSHFLAGS) 'cd /opt/lfs/stage_$* && bash stage_$*.sh'
 	ssh root@localhost $(SSHFLAGS) 'shutdown -h now' || true
-	mv $@~ $@
+	qemu-img convert -O qcow2 $@~ $@
+	$(RM) $@~
 
 $(builddir)/stage_0.qcow2:
 	qemu-img create $@~ $(SIZE)
@@ -105,6 +106,9 @@ $(builddir)/host.qcow2: $(srcdir)/host_customize.sh
 
  ##############################################################################
  # list additional dependencies of above build steps
+
+$(builddir)/stage_3.qcow2: $(builddir)/stage_2.qcow2 $(srcdir)/stage_3/stage_3.sh \
+	$(wildcard $(srcdir)/stage_3/steps/*.sh)
 
 $(builddir)/stage_2.qcow2: $(builddir)/stage_1.qcow2 $(srcdir)/stage_2/stage_2.sh \
 	$(wildcard $(srcdir)/stage_2/steps/*.sh)

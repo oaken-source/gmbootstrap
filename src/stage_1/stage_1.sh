@@ -24,6 +24,7 @@
 
 set -e
 set -u
+set -x
 
 
 export LFS=/mnt/lfs
@@ -43,6 +44,10 @@ chown -v lfs $LFS/tools
 chown -v lfs $LFS/sources
 
 su - lfs << 'OEOF'
+set -e
+set -u
+set -x
+
 cat > ~/.bash_profile << "EOF"
 exec env -i HOME=$HOME TERM=$TERM PS1='\u:\w\$ ' /bin/bash
 EOF
@@ -57,3 +62,6 @@ PATH=/tools/bin:/bin:/usr/bin
 export LFS LC_ALL LFS_TGT PATH
 EOF
 OEOF
+
+umount -R $LFS
+zerofree -v /dev/sdb4
