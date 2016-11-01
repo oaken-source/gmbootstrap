@@ -18,59 +18,40 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this script is invoked on the virtual host to prepare the environment and to
- # initiate the build steps of the preliminary toolchain as the lfs user
 
-set -e
-set -u
-set -x
+tar -xf ncurses-6.0.tar.gz
+cd ncurses-6.0
 
+sed -i '/LIBTOOL_INSTALL/d' c++/Makefile.in
 
-export LFS=/mnt/lfs
+./configure --prefix=/usr           \
+            --mandir=/usr/share/man \
+            --with-shared           \
+            --without-debug         \
+            --without-normal        \
+            --enable-pc-files       \
+            --enable-widec
 
+make
 
-mount -v /dev/sdb4 $LFS
-mount -v /dev/sdb2 $LFS/boot
-mount -v /dev/sdb5 $LFS/home
-swapon -v /dev/sdb3
+make install
 
-mkdir -pv $LFS/{dev,proc,sys,run}
+mv -v /usr/lib/libncursesw.so.6* /lib
 
-mknod -m 600 $LFS/dev/console c 5 1
-mknod -m 666 $LFS/dev/null c 1 3
+ln -sfv ../../lib/$(readlink /usr/lib/libncursesw.so) /usr/lib/libncursesw.so
 
-mount -v --bind /dev $LFS/dev
-
-mount -vt devpts devpts $LFS/dev/pts -o gid=5,mode=620
-mount -vt proc proc $LFS/proc
-mount -vt sysfs sysfs $LFS/sys
-mount -vt tmpfs tmpfs $LFS/run
-
-mkdir -p $LFS/opt/lfs
-mount --bind /opt/lfs $LFS/opt/lfs
-
-if [ -h $LFS/dev/shm ]; then
-  mkdir -pv $LFS/$(readlink $LFS/dev/shm)
-fi
-
-chroot "$LFS" /tools/bin/env -i \
-    HOME=/root                  \
-    TERM="$TERM"                \
-    PS1='\u:\w\$ '              \
-    PATH=/bin:/usr/bin:/sbin:/usr/sbin:/tools/bin \
-    /tools/bin/bash --login +h << 'EOF'
-
-set -e
-set -u
-set -x
-
-cd /sources
-
-for step in $(ls /opt/lfs/stage_3/steps/ | sort -V); do
-  source /opt/lfs/stage_3/steps/$step
+for lib in ncurses form panel menu ; do
+    rm -vf                    /usr/lib/lib${lib}.so
+    echo "INPUT(-l${lib}w)" > /usr/lib/lib${lib}.so
+    ln -sfv ${lib}w.pc        /usr/lib/pkgconfig/${lib}.pc
 done
-EOF
 
-umount -R $LFS
-zerofree -v /dev/sdb4
+rm -vf                     /usr/lib/libcursesw.so
+echo "INPUT(-lncursesw)" > /usr/lib/libcursesw.so
+ln -sfv libncurses.so      /usr/lib/libcurses.so
+
+mkdir -v       /usr/share/doc/ncurses-6.0
+cp -v -R doc/* /usr/share/doc/ncurses-6.0
+
+cd ..
+rm -rf ncurses-6.0

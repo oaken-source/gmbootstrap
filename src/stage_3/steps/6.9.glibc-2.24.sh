@@ -18,59 +18,79 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this script is invoked on the virtual host to prepare the environment and to
- # initiate the build steps of the preliminary toolchain as the lfs user
 
-set -e
-set -u
-set -x
+tar -xf glibc-2.24.tar.xz
+cd glibc-2.24
 
+patch -Np1 -i ../glibc-2.24-fhs-1.patch
 
-export LFS=/mnt/lfs
+mkdir -v build
+cd build
 
+../configure --prefix=/usr          \
+             --enable-kernel=2.6.32 \
+             --enable-obsolete-rpc
 
-mount -v /dev/sdb4 $LFS
-mount -v /dev/sdb2 $LFS/boot
-mount -v /dev/sdb5 $LFS/home
-swapon -v /dev/sdb3
+make
 
-mkdir -pv $LFS/{dev,proc,sys,run}
+make check || true
 
-mknod -m 600 $LFS/dev/console c 5 1
-mknod -m 666 $LFS/dev/null c 1 3
+touch /etc/ld.so.conf
 
-mount -v --bind /dev $LFS/dev
+make install
 
-mount -vt devpts devpts $LFS/dev/pts -o gid=5,mode=620
-mount -vt proc proc $LFS/proc
-mount -vt sysfs sysfs $LFS/sys
-mount -vt tmpfs tmpfs $LFS/run
+cp -v ../nscd/nscd.conf /etc/nscd.conf
+mkdir -pv /var/cache/nscd
 
-mkdir -p $LFS/opt/lfs
-mount --bind /opt/lfs $LFS/opt/lfs
+make localedata/install-locales
 
-if [ -h $LFS/dev/shm ]; then
-  mkdir -pv $LFS/$(readlink $LFS/dev/shm)
-fi
+cat > /etc/nsswitch.conf << "EOF"
+# Begin /etc/nsswitch.conf
 
-chroot "$LFS" /tools/bin/env -i \
-    HOME=/root                  \
-    TERM="$TERM"                \
-    PS1='\u:\w\$ '              \
-    PATH=/bin:/usr/bin:/sbin:/usr/sbin:/tools/bin \
-    /tools/bin/bash --login +h << 'EOF'
+passwd: files
+group: files
+shadow: files
 
-set -e
-set -u
-set -x
+hosts: files dns
+networks: files
 
-cd /sources
+protocols: files
+services: files
+ethers: files
+rpc: files
 
-for step in $(ls /opt/lfs/stage_3/steps/ | sort -V); do
-  source /opt/lfs/stage_3/steps/$step
-done
+# End /etc/nsswitch.conf
 EOF
 
-umount -R $LFS
-zerofree -v /dev/sdb4
+tar -xf ../../tzdata2016f.tar.gz
+
+ZONEINFO=/usr/share/zoneinfo
+mkdir -pv $ZONEINFO/{posix,right}
+
+for tz in etcetera southamerica northamerica europe africa antarctica  \
+          asia australasia backward pacificnew systemv; do
+    zic -L /dev/null   -d $ZONEINFO       -y "sh yearistype.sh" ${tz}
+    zic -L /dev/null   -d $ZONEINFO/posix -y "sh yearistype.sh" ${tz}
+    zic -L leapseconds -d $ZONEINFO/right -y "sh yearistype.sh" ${tz}
+done
+
+cp -v zone.tab zone1970.tab iso3166.tab $ZONEINFO
+zic -d $ZONEINFO -p America/New_York
+unset ZONEINFO
+
+cp -v /usr/share/zoneinfo/UTC /etc/localtime
+
+cat > /etc/ld.so.conf << "EOF"
+# Begin /etc/ld.so.conf
+/usr/local/lib
+/opt/lib
+EOF
+
+cat >> /etc/ld.so.conf << "EOF"
+# Add an include directory
+include /etc/ld.so.conf.d/*.conf
+EOF
+mkdir -pv /etc/ld.so.conf.d
+
+cd ../..
+rm -rf glibc-2.24

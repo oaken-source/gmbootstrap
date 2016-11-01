@@ -18,59 +18,54 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this script is invoked on the virtual host to prepare the environment and to
- # initiate the build steps of the preliminary toolchain as the lfs user
 
-set -e
-set -u
-set -x
+tar -xf gcc-6.2.0.tar.bz2
+cd gcc-6.2.0
 
+mkdir -v build
+cd build
 
-export LFS=/mnt/lfs
+SED=sed                               \
+../configure --prefix=/usr            \
+             --enable-languages=c,c++ \
+             --disable-multilib       \
+             --disable-bootstrap      \
+             --with-system-zlib
 
+make
 
-mount -v /dev/sdb4 $LFS
-mount -v /dev/sdb2 $LFS/boot
-mount -v /dev/sdb5 $LFS/home
-swapon -v /dev/sdb3
+ulimit -s 32768
 
-mkdir -pv $LFS/{dev,proc,sys,run}
+make -k check || true
 
-mknod -m 600 $LFS/dev/console c 5 1
-mknod -m 666 $LFS/dev/null c 1 3
+../contrib/test_summary
 
-mount -v --bind /dev $LFS/dev
+make install
 
-mount -vt devpts devpts $LFS/dev/pts -o gid=5,mode=620
-mount -vt proc proc $LFS/proc
-mount -vt sysfs sysfs $LFS/sys
-mount -vt tmpfs tmpfs $LFS/run
+ln -sv ../usr/bin/cpp /lib
 
-mkdir -p $LFS/opt/lfs
-mount --bind /opt/lfs $LFS/opt/lfs
+ln -sv gcc /usr/bin/cc
 
-if [ -h $LFS/dev/shm ]; then
-  mkdir -pv $LFS/$(readlink $LFS/dev/shm)
-fi
+install -v -dm755 /usr/lib/bfd-plugins
+ln -sfv ../../libexec/gcc/$(gcc -dumpmachine)/6.2.0/liblto_plugin.so \
+        /usr/lib/bfd-plugins/
 
-chroot "$LFS" /tools/bin/env -i \
-    HOME=/root                  \
-    TERM="$TERM"                \
-    PS1='\u:\w\$ '              \
-    PATH=/bin:/usr/bin:/sbin:/usr/sbin:/tools/bin \
-    /tools/bin/bash --login +h << 'EOF'
+echo 'int main(){}' > dummy.c
+cc dummy.c -v -Wl,--verbose &> dummy.log
+readelf -l a.out | grep ': /lib'
 
-set -e
-set -u
-set -x
+grep -o '/usr/lib.*/crt[1in].*succeeded' dummy.log
 
-cd /sources
+grep -B4 '^ /usr/include' dummy.log
 
-for step in $(ls /opt/lfs/stage_3/steps/ | sort -V); do
-  source /opt/lfs/stage_3/steps/$step
-done
-EOF
+grep 'SEARCH.*/usr/lib' dummy.log |sed 's|; |\n|g'
 
-umount -R $LFS
-zerofree -v /dev/sdb4
+grep "/lib.*/libc.so.6 " dummy.log
+
+grep found dummy.log
+
+mkdir -pv /usr/share/gdb/auto-load/usr/lib
+mv -v /usr/lib/*gdb.py /usr/share/gdb/auto-load/usr/lib
+
+cd ../..
+rm -rf gcc-6.2.0

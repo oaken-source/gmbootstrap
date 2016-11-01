@@ -18,59 +18,22 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this script is invoked on the virtual host to prepare the environment and to
- # initiate the build steps of the preliminary toolchain as the lfs user
 
-set -e
-set -u
-set -x
+tar -xf mpfr-3.1.4.tar.xz
+cd mpfr-3.1.4
 
+./configure --prefix=/usr        \
+            --disable-static     \
+            --enable-thread-safe \
+            --docdir=/usr/share/doc/mpfr-3.1.4
 
-export LFS=/mnt/lfs
+make
+make html
 
+make check
 
-mount -v /dev/sdb4 $LFS
-mount -v /dev/sdb2 $LFS/boot
-mount -v /dev/sdb5 $LFS/home
-swapon -v /dev/sdb3
+make install
+make install-html
 
-mkdir -pv $LFS/{dev,proc,sys,run}
-
-mknod -m 600 $LFS/dev/console c 5 1
-mknod -m 666 $LFS/dev/null c 1 3
-
-mount -v --bind /dev $LFS/dev
-
-mount -vt devpts devpts $LFS/dev/pts -o gid=5,mode=620
-mount -vt proc proc $LFS/proc
-mount -vt sysfs sysfs $LFS/sys
-mount -vt tmpfs tmpfs $LFS/run
-
-mkdir -p $LFS/opt/lfs
-mount --bind /opt/lfs $LFS/opt/lfs
-
-if [ -h $LFS/dev/shm ]; then
-  mkdir -pv $LFS/$(readlink $LFS/dev/shm)
-fi
-
-chroot "$LFS" /tools/bin/env -i \
-    HOME=/root                  \
-    TERM="$TERM"                \
-    PS1='\u:\w\$ '              \
-    PATH=/bin:/usr/bin:/sbin:/usr/sbin:/tools/bin \
-    /tools/bin/bash --login +h << 'EOF'
-
-set -e
-set -u
-set -x
-
-cd /sources
-
-for step in $(ls /opt/lfs/stage_3/steps/ | sort -V); do
-  source /opt/lfs/stage_3/steps/$step
-done
-EOF
-
-umount -R $LFS
-zerofree -v /dev/sdb4
+cd ..
+rm -rf mpfr-3.1.4

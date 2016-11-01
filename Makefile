@@ -62,6 +62,10 @@ start:
 		--enable-kvm --nographic -hda $(builddir)/host.qcow2 -hdb $(IMAGE) \
 		-m 1024 &
 
+.PHONY: stop
+stop:
+	ssh root@localhost $(SSHFLAGS) 'shutdown -h now'
+
 .PHONY: ssh
 ssh:
 	ssh root@localhost $(SSHFLAGS)

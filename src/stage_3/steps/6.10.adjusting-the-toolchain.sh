@@ -18,59 +18,29 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this script is invoked on the virtual host to prepare the environment and to
- # initiate the build steps of the preliminary toolchain as the lfs user
 
-set -e
-set -u
-set -x
+mv -v /tools/bin/{ld,ld-old}
+mv -v /tools/$(uname -m)-pc-linux-gnu/bin/{ld,ld-old}
+mv -v /tools/bin/{ld-new,ld}
+ln -sv /tools/bin/ld /tools/$(uname -m)-pc-linux-gnu/bin/ld
 
+gcc -dumpspecs | sed -e 's@/tools@@g'                   \
+    -e '/\*startfile_prefix_spec:/{n;s@.*@/usr/lib/ @}' \
+    -e '/\*cpp:/{n;s@$@ -isystem /usr/include@}' >      \
+    `dirname $(gcc --print-libgcc-file-name)`/specs
 
-export LFS=/mnt/lfs
+echo 'int main(){}' > dummy.c
+cc dummy.c -v -Wl,--verbose &> dummy.log
+readelf -l a.out | grep ': /lib'
 
+grep -o '/usr/lib.*/crt[1in].*succeeded' dummy.log
 
-mount -v /dev/sdb4 $LFS
-mount -v /dev/sdb2 $LFS/boot
-mount -v /dev/sdb5 $LFS/home
-swapon -v /dev/sdb3
+grep -B1 '^ /usr/include' dummy.log
 
-mkdir -pv $LFS/{dev,proc,sys,run}
+grep 'SEARCH.*/usr/lib' dummy.log |sed 's|; |\n|g'
 
-mknod -m 600 $LFS/dev/console c 5 1
-mknod -m 666 $LFS/dev/null c 1 3
+grep "/lib.*/libc.so.6 " dummy.log
 
-mount -v --bind /dev $LFS/dev
+grep found dummy.log
 
-mount -vt devpts devpts $LFS/dev/pts -o gid=5,mode=620
-mount -vt proc proc $LFS/proc
-mount -vt sysfs sysfs $LFS/sys
-mount -vt tmpfs tmpfs $LFS/run
-
-mkdir -p $LFS/opt/lfs
-mount --bind /opt/lfs $LFS/opt/lfs
-
-if [ -h $LFS/dev/shm ]; then
-  mkdir -pv $LFS/$(readlink $LFS/dev/shm)
-fi
-
-chroot "$LFS" /tools/bin/env -i \
-    HOME=/root                  \
-    TERM="$TERM"                \
-    PS1='\u:\w\$ '              \
-    PATH=/bin:/usr/bin:/sbin:/usr/sbin:/tools/bin \
-    /tools/bin/bash --login +h << 'EOF'
-
-set -e
-set -u
-set -x
-
-cd /sources
-
-for step in $(ls /opt/lfs/stage_3/steps/ | sort -V); do
-  source /opt/lfs/stage_3/steps/$step
-done
-EOF
-
-umount -R $LFS
-zerofree -v /dev/sdb4
+rm -v dummy.c a.out dummy.log
