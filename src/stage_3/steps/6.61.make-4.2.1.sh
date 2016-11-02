@@ -19,8 +19,8 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf make-4.2.1.tar.bz2
+cd make-4.2.1
 
 ./configure --prefix=/usr
 
@@ -31,4 +31,4 @@ make check
 make install
 
 cd ..
-rm -rf libtool-2.4.6
+rm -rf make-4.2.1

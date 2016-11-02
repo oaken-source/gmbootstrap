@@ -19,16 +19,14 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf groff-1.22.3.tar.gz
+cd groff-1.22.3
 
-./configure --prefix=/usr
+PAGE=A4 ./configure --prefix=/usr
 
 make
-
-make check
 
 make install
 
 cd ..
-rm -rf libtool-2.4.6
+rm -rf groff-1.22.3

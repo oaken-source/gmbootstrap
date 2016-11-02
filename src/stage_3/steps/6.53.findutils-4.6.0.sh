@@ -19,10 +19,10 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf findutils-4.6.0.tar.gz
+cd findutils-4.6.0
 
-./configure --prefix=/usr
+./configure --prefix=/usr --localstatedir=/var/lib/locate
 
 make
 
@@ -30,5 +30,8 @@ make check
 
 make install
 
+mv -v /usr/bin/find /bin
+sed -i 's|find:=${BINDIR}|find:=/bin|' /usr/bin/updatedb
+
 cd ..
-rm -rf libtool-2.4.6
+rm -rf findutils-4.6.0

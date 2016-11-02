@@ -19,10 +19,16 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf man-db-2.7.5.tar.xz
+cd man-db-2.7.5
 
-./configure --prefix=/usr
+./configure --prefix=/usr                        \
+            --docdir=/usr/share/doc/man-db-2.7.5 \
+            --sysconfdir=/etc                    \
+            --disable-setuid                     \
+            --with-browser=/usr/bin/lynx         \
+            --with-vgrind=/usr/bin/vgrind        \
+            --with-grap=/usr/bin/grap
 
 make
 
@@ -30,5 +36,7 @@ make check
 
 make install
 
+sed -i "s:man root:root root:g" /usr/lib/tmpfiles.d/man-db.conf
+
 cd ..
-rm -rf libtool-2.4.6
+rm -rf man-db-2.7.5

@@ -19,16 +19,16 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf XML-Parser-2.44.tar.gz
+cd XML-Parser-2.44
 
-./configure --prefix=/usr
+perl Makefile.PL
 
 make
 
-make check
+make test
 
 make install
 
 cd ..
-rm -rf libtool-2.4.6
+rm -rf XML-Parser-2.44

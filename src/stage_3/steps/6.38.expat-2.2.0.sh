@@ -19,10 +19,10 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf expat-2.2.0.tar.bz2
+cd expat-2.2.0
 
-./configure --prefix=/usr
+./configure --prefix=/usr --disable-static
 
 make
 
@@ -30,5 +30,8 @@ make check
 
 make install
 
+install -v -dm755 /usr/share/doc/expat-2.2.0
+install -v -m644 doc/*.{html,png,css} /usr/share/doc/expat-2.2.0
+
 cd ..
-rm -rf libtool-2.4.6
+rm -rf expat-2.2.0

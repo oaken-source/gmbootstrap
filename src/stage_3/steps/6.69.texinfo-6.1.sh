@@ -19,10 +19,10 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf texinfo-6.1.tar.xz
+cd texinfo-6.1
 
-./configure --prefix=/usr
+./configure --prefix=/usr --disable-static
 
 make
 
@@ -30,5 +30,14 @@ make check
 
 make install
 
+make TEXMF=/usr/share/texmf install-tex
+
+pushd /usr/share/info
+rm -v dir
+for f in *
+  do install-info $f dir 2>/dev/null
+done
+popd
+
 cd ..
-rm -rf libtool-2.4.6
+rm -rf texinfo-6.1

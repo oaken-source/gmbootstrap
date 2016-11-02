@@ -19,8 +19,8 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf gzip-1.8.tar.xz
+cd gzip-1.8
 
 ./configure --prefix=/usr
 
@@ -30,5 +30,7 @@ make check
 
 make install
 
+mv -v /usr/bin/gzip /bin
+
 cd ..
-rm -rf libtool-2.4.6
+rm -rf gzip-1.8

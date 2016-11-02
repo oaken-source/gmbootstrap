@@ -19,16 +19,19 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf automake-1.15.tar.xz
+cd automake-1.15
 
-./configure --prefix=/usr
+sed -i 's:/\\\${:/\\\$\\{:' bin/automake.in
+
+./configure --prefix=/usr --docdir=/usr/share/doc/automake-1.15
 
 make
 
-make check
+sed -i "s:./configure:LEXLIB=/usr/lib/libfl.a &:" t/lex-{clean,depend}-cxx.sh
+make -j4 check
 
 make install
 
 cd ..
-rm -rf libtool-2.4.6
+rm -rf automake-1.15

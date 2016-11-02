@@ -19,16 +19,16 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf gperf-3.0.4.tar.gz
+cd gperf-3.0.4
 
-./configure --prefix=/usr
+./configure --prefix=/usr --docdir=/usr/share/doc/gperf-3.0.4
 
 make
 
-make check
+make -j1 check
 
 make install
 
 cd ..
-rm -rf libtool-2.4.6
+rm -rf gperf-3.0.4

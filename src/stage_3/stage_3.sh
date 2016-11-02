@@ -85,10 +85,22 @@ set -x
 
 cd /sources
 
-for step in /opt/lfs/stage_3/steps/6.{34..34}.*; do
+for step in /opt/lfs/stage_3/steps/6.{34..70}.*; do
   source $step
 done
+
+rm -rf /tmp/*
+
+rm -f /usr/lib/lib{bfd,opcodes}.a
+rm -f /usr/lib/libbz2.a
+rm -f /usr/lib/lib{com_err,e2p,ext2fs,ss}.a
+rm -f /usr/lib/libltdl.a
+rm -f /usr/lib/libfl.a
+rm -f /usr/lib/libfl_pic.a
+rm -f /usr/lib/libz.a
 EOF
+
+rm -rf /mnt/lfs/tools /tools
 
 umount -R $LFS
 zerofree -v /dev/sdb4

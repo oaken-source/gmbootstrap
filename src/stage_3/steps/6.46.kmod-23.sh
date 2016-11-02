@@ -19,16 +19,25 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf kmod-23.tar.xz
+cd kmod-23
 
-./configure --prefix=/usr
+./configure --prefix=/usr          \
+            --bindir=/bin          \
+            --sysconfdir=/etc      \
+            --with-rootlibdir=/lib \
+            --with-xz              \
+            --with-zlib
 
 make
 
-make check
-
 make install
 
+for target in depmod insmod lsmod modinfo modprobe rmmod; do
+  ln -sfv ../bin/kmod /sbin/$target
+done
+
+ln -sfv kmod /bin/lsmod
+
 cd ..
-rm -rf libtool-2.4.6
+rm -rf kmod-23

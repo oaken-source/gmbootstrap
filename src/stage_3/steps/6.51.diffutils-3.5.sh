@@ -19,8 +19,10 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf diffutils-3.5.tar.xz
+cd diffutils-3.5
+
+sed -i 's:= @mkdir_p@:= /bin/mkdir -p:' po/Makefile.in.in
 
 ./configure --prefix=/usr
 
@@ -31,4 +33,4 @@ make check
 make install
 
 cd ..
-rm -rf libtool-2.4.6
+rm -rf diffutils-3.5

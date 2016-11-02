@@ -19,16 +19,19 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf gettext-0.19.8.1.tar.xz
+cd gettext-0.19.8.1
 
-./configure --prefix=/usr
+./configure --prefix=/usr    \
+            --disable-static \
+            --docdir=/usr/share/doc/gettext-0.19.8.1
 
 make
 
 make check
 
 make install
+chmod -v 0755 /usr/lib/preloadable_libintl.so
 
 cd ..
-rm -rf libtool-2.4.6
+rm -rf gettext-0.19.8.1

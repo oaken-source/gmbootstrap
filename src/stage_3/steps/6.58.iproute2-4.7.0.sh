@@ -19,16 +19,18 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf iproute2-4.7.0.tar.xz
+cd iproute2-4.7.0
 
-./configure --prefix=/usr
+sed -i /ARPD/d Makefile
+sed -i 's/arpd.8//' man/man8/Makefile
+rm -v doc/arpd.sgml
+
+sed -i 's/m_ipt.o//' tc/Makefile
 
 make
 
-make check
-
-make install
+make DOCDIR=/usr/share/doc/iproute2-4.7.0 install
 
 cd ..
-rm -rf libtool-2.4.6
+rm -rf iproute2-4.7.0

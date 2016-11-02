@@ -19,10 +19,10 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf libpipeline-1.4.1.tar.gz
+cd libpipeline-1.4.1
 
-./configure --prefix=/usr
+PKG_CONFIG_PATH=/tools/lib/pkgconfig ./configure --prefix=/usr
 
 make
 
@@ -31,4 +31,4 @@ make check
 make install
 
 cd ..
-rm -rf libtool-2.4.6
+rm -rf libpipeline-1.4.1

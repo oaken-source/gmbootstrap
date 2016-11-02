@@ -19,10 +19,12 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf gdbm-1.12.tar.gz
+cd gdbm-1.12
 
-./configure --prefix=/usr
+./configure --prefix=/usr \
+            --disable-static \
+            --enable-libgdbm-compat
 
 make
 
@@ -31,4 +33,4 @@ make check
 make install
 
 cd ..
-rm -rf libtool-2.4.6
+rm -rf gdbm-1.12

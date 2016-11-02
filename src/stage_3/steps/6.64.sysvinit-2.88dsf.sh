@@ -19,16 +19,14 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf sysvinit-2.88dsf.tar.bz2
+cd sysvinit-2.88dsf
 
-./configure --prefix=/usr
+patch -Np1 -i ../sysvinit-2.88dsf-consolidated-1.patch
 
-make
+make -C src
 
-make check
-
-make install
+make -C src install
 
 cd ..
-rm -rf libtool-2.4.6
+rm -rf sysvinit-2.88dsf

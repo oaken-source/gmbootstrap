@@ -19,16 +19,18 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf grub-2.02~beta3.tar.xz
+cd grub-2.02~beta3
 
-./configure --prefix=/usr
+./configure --prefix=/usr          \
+            --sbindir=/sbin        \
+            --sysconfdir=/etc      \
+            --disable-efiemu       \
+            --disable-werror
 
 make
-
-make check
 
 make install
 
 cd ..
-rm -rf libtool-2.4.6
+rm -rf grub-2.02~beta3

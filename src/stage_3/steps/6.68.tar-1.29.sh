@@ -19,16 +19,19 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf tar-1.29.tar.xz
+cd tar-1.29
 
-./configure --prefix=/usr
+FORCE_UNSAFE_CONFIGURE=1  \
+./configure --prefix=/usr \
+            --bindir=/bin
 
 make
 
 make check
 
 make install
+make -C doc install-html docdir=/usr/share/doc/tar-1.29
 
 cd ..
-rm -rf libtool-2.4.6
+rm -rf tar-1.29

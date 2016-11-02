@@ -19,16 +19,14 @@
  ##############################################################################
 
 
-tar -xf libtool-2.4.6.tar.xz
-cd libtool-2.4.6
+tar -xf less-481.tar.gz
+cd less-481
 
-./configure --prefix=/usr
+./configure --prefix=/usr --sysconfdir=/etc
 
 make
-
-make check
 
 make install
 
 cd ..
-rm -rf libtool-2.4.6
+rm -rf less-481
