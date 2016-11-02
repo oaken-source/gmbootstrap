@@ -18,37 +18,25 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this script is invoked on the virtual host to prepare the environment and to
- # initiate the build steps of the preliminary toolchain as the lfs user
 
-set -e
-set -u
-set -x
+tar -xf bash-4.3.30.tar.gz
+cd bash-4.3.30
 
+patch -Np1 -i ../bash-4.3.30-upstream_fixes-3.patch
 
-export LFS=/mnt/lfs
+./configure --prefix=/usr                       \
+            --docdir=/usr/share/doc/bash-4.3.30 \
+            --without-bash-malloc               \
+            --with-installed-readline
 
+make
 
-mount -v /dev/sdb4 $LFS
-mount -v /dev/sdb2 $LFS/boot
-mount -v /dev/sdb5 $LFS/home
-swapon -v /dev/sdb3
+chown -Rv nobody .
 
-su - lfs << 'EOF'
-set -e
-set -u
-set -x
+su nobody -s /bin/bash -c "PATH=$PATH make tests"
 
-source ~/.bashrc
-cd $LFS/sources
+make install
+mv -vf /usr/bin/bash /bin
 
-for step in /opt/lfs/stage_2/steps/5.{4..35}.*; do
-  source $step
-done
-EOF
-
-chown -R root:root $LFS/tools
-
-umount -R $LFS
-zerofree -v /dev/sdb4
+cd ..
+rm -rf bash-4.3.30

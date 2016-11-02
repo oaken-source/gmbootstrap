@@ -18,37 +18,22 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this script is invoked on the virtual host to prepare the environment and to
- # initiate the build steps of the preliminary toolchain as the lfs user
 
-set -e
-set -u
-set -x
+tar -xf bc-1.06.95.tar.bz2
+cd bc-1.06.95
 
+patch -Np1 -i ../bc-1.06.95-memory_leak-1.patch
 
-export LFS=/mnt/lfs
+./configure --prefix=/usr           \
+            --with-readline         \
+            --mandir=/usr/share/man \
+            --infodir=/usr/share/info
 
+make
 
-mount -v /dev/sdb4 $LFS
-mount -v /dev/sdb2 $LFS/boot
-mount -v /dev/sdb5 $LFS/home
-swapon -v /dev/sdb3
+echo "quit" | ./bc/bc -l Test/checklib.b
 
-su - lfs << 'EOF'
-set -e
-set -u
-set -x
+make install
 
-source ~/.bashrc
-cd $LFS/sources
-
-for step in /opt/lfs/stage_2/steps/5.{4..35}.*; do
-  source $step
-done
-EOF
-
-chown -R root:root $LFS/tools
-
-umount -R $LFS
-zerofree -v /dev/sdb4
+cd ..
+rm -rf bc-1.06.95

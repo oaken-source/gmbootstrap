@@ -19,17 +19,27 @@
  ##############################################################################
 
 
-tar -xf gzip-1.8.tar.xz
-cd gzip-1.8
+tar -xf readline-6.3.tar.gz
+cd readline-6.3
 
-./configure --prefix=/tools
+patch -Np1 -i ../readline-6.3-upstream_fixes-3.patch
 
-make
+sed -i '/MV.*old/d' Makefile.in
+sed -i '/{OLDSUFF}/c:' support/shlib-install
 
-# test suite is not critial at this point
-# make check
+./configure --prefix=/usr    \
+            --disable-static \
+            --docdir=/usr/share/doc/readline-6.3
 
-make install
+make SHLIB_LIBS=-lncurses
+
+make SHLIB_LIBS=-lncurses install
+
+mv -v /usr/lib/lib{readline,history}.so.* /lib
+ln -sfv ../../lib/$(readlink /usr/lib/libreadline.so) /usr/lib/libreadline.so
+ln -sfv ../../lib/$(readlink /usr/lib/libhistory.so ) /usr/lib/libhistory.so
+
+install -v -m644 doc/*.{ps,pdf,html,dvi} /usr/share/doc/readline-6.3
 
 cd ..
-rm -rf gzip-1.8
+rm -rf readline-6.3

@@ -67,8 +67,26 @@ set -x
 
 cd /sources
 
-for step in $(ls /opt/lfs/stage_3/steps/ | sort -V); do
-  source /opt/lfs/stage_3/steps/$step
+for step in /opt/lfs/stage_3/steps/6.{5..33}.*; do
+  source $step
+done
+EOF
+
+chroot "$LFS" /tools/bin/env -i \
+    HOME=/root                  \
+    TERM="$TERM"                \
+    PS1='\u:\w\$ '              \
+    PATH=/bin:/usr/bin:/sbin:/usr/sbin:/tools/bin \
+    /bin/bash --login +h << 'EOF'
+
+set -e
+set -u
+set -x
+
+cd /sources
+
+for step in /opt/lfs/stage_3/steps/6.{34..34}.*; do
+  source $step
 done
 EOF
 

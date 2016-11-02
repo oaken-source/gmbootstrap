@@ -18,37 +18,6 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this script is invoked on the virtual host to prepare the environment and to
- # initiate the build steps of the preliminary toolchain as the lfs user
 
-set -e
-set -u
-set -x
-
-
-export LFS=/mnt/lfs
-
-
-mount -v /dev/sdb4 $LFS
-mount -v /dev/sdb2 $LFS/boot
-mount -v /dev/sdb5 $LFS/home
-swapon -v /dev/sdb3
-
-su - lfs << 'EOF'
-set -e
-set -u
-set -x
-
-source ~/.bashrc
-cd $LFS/sources
-
-for step in /opt/lfs/stage_2/steps/5.{4..35}.*; do
-  source $step
-done
-EOF
-
-chown -R root:root $LFS/tools
-
-umount -R $LFS
-zerofree -v /dev/sdb4
+# you were here
+exit 1
