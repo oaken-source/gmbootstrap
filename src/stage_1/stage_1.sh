@@ -24,7 +24,6 @@
 
 set -e
 set -u
-set -x
 
 
 export LFS=/mnt/lfs

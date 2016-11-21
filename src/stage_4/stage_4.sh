@@ -19,52 +19,30 @@
  ##############################################################################
 
  ##############################################################################
- # this script is invoked on the build host to prepare the structure of the
- # bootstrapped image
+ # this script is invoked after the build is finished to configure the newly
+ # built system
 
 set -e
 set -u
 
 
-loop=$(losetup -f --show $1)
+export LFS=/mnt/lfs
 
-# partition virtual disk
-parted $loop << EOF
-mklabel gpt
-mkpart primary 1MiB 2MiB
-mkpart primary ext3 2MiB 250MiB
-mkpart primary linux-swap 250MiB 2GiB
-mkpart primary ext4 2GiB 24GiB
-mkpart primary ext4 24GiB 100%
-set 1 bios_grub on
-EOF
 
-# create filesystems
-mkfs.ext3 -v ${loop}p2
-mkfs.ext4 -v ${loop}p4
-mkfs.ext4 -v ${loop}p5
-mkswap ${loop}p3
+mount -v /dev/sdb4 $LFS
+mount -v /dev/sdb2 $LFS/boot
+mount -v /dev/sdb5 $LFS/home
+swapon -v /dev/sdb3
 
-LFS=$(mktemp -d)
+mount -v --bind /dev $LFS/dev
 
-# mount partitions
-mkdir -pv $LFS
-mount -v ${loop}p4 $LFS
-mkdir -pv $LFS/{boot,home}
-mount -v ${loop}p2 $LFS/boot
-mount -v ${loop}p5 $LFS/home
+mount -vt devpts devpts $LFS/dev/pts -o gid=5,mode=620
+mount -vt proc proc $LFS/proc
+mount -vt sysfs sysfs $LFS/sys
+mount -vt tmpfs tmpfs $LFS/run
 
-# copy sources
-mkdir -pv $LFS/sources
-chmod -v a+wt $LFS/sources
-cp -v $sourcesdir/* $LFS/sources/
+mkdir -p $LFS/opt/lfs
+mount --bind /opt/lfs $LFS/opt/lfs
 
-# verify sources
-pushd $LFS/sources
-md5sum -c md5sums
-popd
-
-# cleanup
-umount -vR $LFS
-losetup -d $loop
-rm -r $LFS
+umount -R $LFS
+zerofree -v /dev/sdb4

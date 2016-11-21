@@ -26,18 +26,22 @@ set -e
 set -u
 
 
+# install ssh authorized_keys
 mkdir -vp $1/root/.ssh
 chmod -v 0700 $1/root/.ssh
 cp -v _ssh/id_rsa.pub $1/root/.ssh/authorized_keys
 chmod -v 0644 $1/root/.ssh/authorized_keys
 
+# install ssh host keys
 cp -v _ssh/ssh_host_* $1/etc/ssh/
 chmod -v 0600 $1/etc/ssh/ssh_host_*_key
 chmod -v 0644 $1/etc/ssh/ssh_host_*_key.pub
 
+# prepare scripts directory
 mkdir -vp $1/opt/lfs
 chmod -v a+wt $1/opt/lfs
 
+# create lfs user
 chroot $1 << EOF
   ln -vsf bash /bin/sh
 

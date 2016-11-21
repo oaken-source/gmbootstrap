@@ -7,6 +7,7 @@
 LFS-BOOK-*.pdf
 
 # build directories
+_sources/
 _build/
 _ssh/
 
