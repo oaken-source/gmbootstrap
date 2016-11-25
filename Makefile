@@ -95,13 +95,9 @@ $(builddir)/stage_%.qcow2:
 	qemu-img convert -O qcow2 $@~ $@
 	$(RM) $@~
 
-$(builddir)/stage_0.qcow2:
+$(builddir)/stage_0.qcow2: $(sourcesdir)/wget-list $(sourcesdir)/md5sums
 	qemu-img create $@~ $(SIZE)
-	wget $(LFS_MIRROR)/wget-list -O $(sourcesdir)/wget-list
-	cat $(srcdir)/wget-list >> $(sourcesdir)/wget-list
 	for url in $$(cat $(sourcesdir)/wget-list); do wget -c $$url -P $(sourcesdir); done
-	wget $(LFS_MIRROR)/md5sums -O $(sourcesdir)/md5sums
-	cat $(srcdir)/md5sums >> $(sourcesdir)/md5sums
 	cd $(sourcesdir) && md5sum -c md5sums
 	sudo -E bash $(srcdir)/stage_0/stage_0.sh $@~
 	qemu-img convert -O qcow2 $@~ $@
@@ -114,6 +110,17 @@ $(builddir)/host.qcow2: $(srcdir)/host_customize.sh
 		--enable-dhcp
 	qemu-img convert -O qcow2 $@~ $@
 	$(RM) $@~
+
+ ##############################################################################
+ # rules to generate wget-list and md5sums
+
+$(sourcesdir)/wget-list: $(srcdir)/wget-list
+	wget $(LFS_MIRROR)/wget-list -O $@
+	cat $< >> $@
+
+$(sourcesdir)/md5sums: $(srcdir)/md5sums
+	wget $(LFS_MIRROR)/md5sums -O $@
+	cat $< >> $@
 
  ##############################################################################
  # list additional dependencies of above build steps
