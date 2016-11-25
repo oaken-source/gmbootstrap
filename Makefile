@@ -80,7 +80,7 @@ LFS-BOOK-%.pdf:
  ##############################################################################
  # rules to build the final image
 
-$(IMAGE): $(builddir)/stage_4.qcow2
+$(IMAGE): $(builddir)/stage_5.qcow2
 	cp $< $@
 
 $(builddir)/stage_%.qcow2:
@@ -97,9 +97,15 @@ $(builddir)/stage_%.qcow2:
 
 $(builddir)/stage_0.qcow2:
 	qemu-img create $@~ $(SIZE)
-	wget -c $(LFS_MIRROR)/wget-list -P $(sourcesdir)
+	wget $(LFS_MIRROR)/wget-list -O $(sourcesdir)/wget-list
+	echo 'ftp://ftp.isc.org/isc/dhcp/4.3.4/dhcp-4.3.4.tar.gz' >> $(sourcesdir)/wget-list
+	echo 'http://www.linuxfromscratch.org/patches/blfs/7.10/dhcp-4.3.4-client_script-1.patch' >> $(sourcesdir)/wget-list
+	echo 'http://anduin.linuxfromscratch.org/BLFS/blfs-bootscripts/blfs-bootscripts-20160902.tar.xz' > $(sourcesdir)/wget-list
 	for url in $$(cat $(sourcesdir)/wget-list); do wget -c $$url -P $(sourcesdir); done
-	wget -c $(LFS_MIRROR)/md5sums -P $(sourcesdir)
+	wget $(LFS_MIRROR)/md5sums -O $(sourcesdir)/md5sums
+	echo '0138319fe2b788cf4bdf34fbeaf9ff54  dhcp-4.3.4.tar.gz' >> $(sourcesdir)/md5sums
+	echo 'c02bddb6c6c33c5885e3dd072ee2ee40  dhcp-4.3.4-client_script-1.patch' >> $(sourcesdir)/md5sums
+	echo '5629f43e994d6b3e7b347893a232a867  blfs-bootscripts-20160902.tar.xz' >> $(sourcesdir)/md5sums
 	cd $(sourcesdir) && md5sum -c md5sums
 	sudo -E bash $(srcdir)/stage_0/stage_0.sh $@~
 	qemu-img convert -O qcow2 $@~ $@
@@ -115,6 +121,8 @@ $(builddir)/host.qcow2: $(srcdir)/host_customize.sh
 
  ##############################################################################
  # list additional dependencies of above build steps
+
+$(builddir)/stage_5.qcow2: $(builddir)/stage_4.qcow2 $(srcdir)/stage_5/stage_5.sh
 
 $(builddir)/stage_4.qcow2: $(builddir)/stage_3.qcow2 $(srcdir)/stage_4/stage_4.sh
 

@@ -62,7 +62,6 @@ chroot "$LFS" /tools/bin/env -i \
 
 set -e
 set -u
-set -x
 
 cd /sources
 
@@ -80,13 +79,14 @@ chroot "$LFS" /tools/bin/env -i \
 
 set -e
 set -u
-set -x
 
 cd /sources
 
 for step in /opt/lfs/stage_3/steps/6.{34..70}.*; do
   source $step
 done
+
+source /opt/lfs/stage_3/steps/A.dhcp-4.3.4.sh
 
 rm -rf /tmp/*
 

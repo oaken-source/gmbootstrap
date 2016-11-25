@@ -18,48 +18,26 @@
  #    along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
  ##############################################################################
 
- ##############################################################################
- # this script is invoked on the virtual host to prepare for the build steps
- # of the preliminary toolchain
 
-set -e
-set -u
+tar -xf dhcp-4.3.4.tar.gz
+cd dhcp-4.3.4
 
+patch -Np1 -i ../dhcp-4.3.4-client_script-1.patch &&
+CFLAGS="-D_PATH_DHCLIENT_SCRIPT='\"/sbin/dhclient-script\"'         \
+        -D_PATH_DHCPD_CONF='\"/etc/dhcp/dhcpd.conf\"'               \
+        -D_PATH_DHCLIENT_CONF='\"/etc/dhcp/dhclient.conf\"'"        \
+./configure --prefix=/usr                                           \
+            --sysconfdir=/etc/dhcp                                  \
+            --localstatedir=/var                                    \
+            --with-srv-lease-file=/var/lib/dhcpd/dhcpd.leases       \
+            --with-srv6-lease-file=/var/lib/dhcpd/dhcpd6.leases     \
+            --with-cli-lease-file=/var/lib/dhclient/dhclient.leases \
+            --with-cli6-lease-file=/var/lib/dhclient/dhclient6.leases &&
+make -j1
 
-export LFS=/mnt/lfs
+make -C client install         &&
+mv -v /usr/sbin/dhclient /sbin &&
+install -v -m755 client/scripts/linux /sbin/dhclient-script
 
-
-mkdir -pv $LFS
-mount -v /dev/sdb4 $LFS
-mkdir -pv $LFS/{boot,home}
-mount -v /dev/sdb2 $LFS/boot
-mount -v /dev/sdb5 $LFS/home
-swapon -v /dev/sdb3
-
-mkdir -pv $LFS/tools
-ln -sfv $LFS/tools /
-
-chown -v lfs $LFS/tools
-chown -v lfs $LFS/sources
-
-su - lfs << 'OEOF'
-set -e
-set -u
-
-cat > ~/.bash_profile << "EOF"
-exec env -i HOME=$HOME TERM=$TERM PS1='\u:\w\$ ' /bin/bash
-EOF
-
-cat > ~/.bashrc << "EOF"
-set +h
-umask 022
-LFS=/mnt/lfs
-LC_ALL=POSIX
-LFS_TGT=$(uname -m)-lfs-linux-gnu
-PATH=/tools/bin:/bin:/usr/bin
-export LFS LC_ALL LFS_TGT PATH
-EOF
-OEOF
-
-umount -R $LFS
-zerofree -v /dev/sdb4
+cd ..
+rm -rf dhcp-4.3.4

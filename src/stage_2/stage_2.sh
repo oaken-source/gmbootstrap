@@ -37,7 +37,6 @@ swapon -v /dev/sdb3
 su - lfs << 'EOF'
 set -e
 set -u
-set -x
 
 source ~/.bashrc
 cd $LFS/sources
