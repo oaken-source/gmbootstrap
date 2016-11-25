@@ -98,14 +98,10 @@ $(builddir)/stage_%.qcow2:
 $(builddir)/stage_0.qcow2:
 	qemu-img create $@~ $(SIZE)
 	wget $(LFS_MIRROR)/wget-list -O $(sourcesdir)/wget-list
-	echo 'ftp://ftp.isc.org/isc/dhcp/4.3.4/dhcp-4.3.4.tar.gz' >> $(sourcesdir)/wget-list
-	echo 'http://www.linuxfromscratch.org/patches/blfs/7.10/dhcp-4.3.4-client_script-1.patch' >> $(sourcesdir)/wget-list
-	echo 'http://anduin.linuxfromscratch.org/BLFS/blfs-bootscripts/blfs-bootscripts-20160902.tar.xz' > $(sourcesdir)/wget-list
+	cat $(srcdir)/wget-list >> $(sourcesdir)/wget-list
 	for url in $$(cat $(sourcesdir)/wget-list); do wget -c $$url -P $(sourcesdir); done
 	wget $(LFS_MIRROR)/md5sums -O $(sourcesdir)/md5sums
-	echo '0138319fe2b788cf4bdf34fbeaf9ff54  dhcp-4.3.4.tar.gz' >> $(sourcesdir)/md5sums
-	echo 'c02bddb6c6c33c5885e3dd072ee2ee40  dhcp-4.3.4-client_script-1.patch' >> $(sourcesdir)/md5sums
-	echo '5629f43e994d6b3e7b347893a232a867  blfs-bootscripts-20160902.tar.xz' >> $(sourcesdir)/md5sums
+	cat $(srcdir)/md5sums >> $(sourcesdir)/md5sums
 	cd $(sourcesdir) && md5sum -c md5sums
 	sudo -E bash $(srcdir)/stage_0/stage_0.sh $@~
 	qemu-img convert -O qcow2 $@~ $@
