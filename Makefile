@@ -47,7 +47,7 @@ export sshdir = _ssh
  # toplevel targets - all, clean, veryclean
 
 .PHONY: all
-all: $(builddir) $(sshdir) $(builddir)/host.qcow2 $(IMAGE)
+all: $(builddir) $(sourcesdir) $(sshdir) $(builddir)/host.qcow2 $(IMAGE)
 
 .PHONY: clean
 clean:
