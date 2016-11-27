@@ -29,6 +29,8 @@ mv -v gmp-6.1.1 gmp
 tar -xf ../mpc-1.0.3.tar.gz
 mv -v mpc-1.0.3 mpc
 
+patch -Np1 -i ../config.sub.patch
+
 for file in \
  $(find gcc/config -name linux64.h -o -name linux.h -o -name sysv4.h)
 do

@@ -71,6 +71,11 @@ stop:
 ssh:
 	ssh root@localhost $(SSHFLAGS)
 
+.PHONY: redeploy
+redeploy:
+	scp -r $(SCPFLAGS) $(srcdir)/stage_* root@localhost:/opt/lfs/
+
+
 .PHONY: book
 book: LFS-BOOK-$(LFS_VERSION).pdf
 

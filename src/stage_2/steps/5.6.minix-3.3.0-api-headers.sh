@@ -19,13 +19,13 @@
  ##############################################################################
 
 
-tar -xf linux-4.7.2.tar.xz
-cd linux-4.7.2
+tar -xf v3.3.0.tar.gz
+cd minix-3.3.0
 
-make mrproper
-
-make INSTALL_HDR_PATH=dest headers_install
-cp -rv dest/include/* /tools/include
+#make mrproper
+#
+#make INSTALL_HDR_PATH=dest headers_install
+#cp -rv dest/include/* /tools/include
 
 cd ..
-rm -rf linux-4.7.2
+rm -rf minix-3.3.0

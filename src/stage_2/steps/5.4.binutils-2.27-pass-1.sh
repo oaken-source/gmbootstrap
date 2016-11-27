@@ -22,6 +22,8 @@
 tar -xf binutils-2.27.tar.bz2
 cd binutils-2.27
 
+patch -Np1 -i ../config.sub.patch
+
 mkdir -v build
 cd build
 

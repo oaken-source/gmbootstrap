@@ -9,7 +9,7 @@ running GNU/Minix Operating System, powered by Vagrant[2].
  Minix[3] is a Microkernel, which we hope will work well with the GNU userland
 to provide the open source community with an excellent alternative to Linux.
 
- The current build of GNU/Minix uses LFS version 7.10, and Minix version 3.2.1
+ The current build of GNU/Minix uses LFS version 7.10, and Minix version 3.3.0
 
 Current Status:
 

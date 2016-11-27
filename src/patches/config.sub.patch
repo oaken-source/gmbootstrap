@@ -1,0 +1,11 @@
+diff -rupN binutils-2.27/config.sub binutils-2.27-new/config.sub
+--- old/config.sub	2016-08-03 07:36:51.000000000 +0000
++++ new/config.sub	2016-11-25 19:39:23.648000000 +0000
+@@ -118,6 +118,7 @@ case $maybe_os in
+   linux-musl* | linux-uclibc* | uclinux-uclibc* | uclinux-gnu* | kfreebsd*-gnu* | \
+   knetbsd*-gnu* | netbsd*-gnu* | netbsd*-eabi* | \
+   kopensolaris*-gnu* | \
++  minix-gnu* | \
+   storm-chaos* | os2-emx* | rtmk-nova*)
+     os=-$maybe_os
+     basic_machine=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\1/'`

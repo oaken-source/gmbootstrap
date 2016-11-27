@@ -58,6 +58,7 @@ mount -v ${loop}p5 $LFS/home
 mkdir -pv $LFS/sources
 chmod -v a+wt $LFS/sources
 cp -v $sourcesdir/* $LFS/sources/
+cp -v $srcdir/patches/* $LFS/sources/
 
 # verify sources
 pushd $LFS/sources
